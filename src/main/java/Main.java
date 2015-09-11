@@ -25,7 +25,7 @@ public class Main {
     port(Integer.valueOf(System.getenv("PORT")));
 
     get("/:hash", "application/json", (request, response) -> {
-      String hash = request.params(":hash");
+      String hash = request.params(":hsh");
       return cache.get(hash, () -> {
         response.status(404);
         return "{\"error\":\"Forgot state of board. Please retry.\"}";
