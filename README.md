@@ -1,27 +1,25 @@
-# java-getting-started
+# Weblabora as a Service
 
-A barebones Java app, which can easily be deployed to Heroku.  
+This was thrown together late one September night while I was fed up with Play Framework growing increasingly outdated and wanted to
+switch over to Ruby or perhaps something entirely in Javascript.
 
-This application support the [Getting Started with Java on Heroku](https://devcenter.heroku.com/articles/getting-started-with-java) article - check it out.
+It was made from some Heroku boilerplate, and should be able to be deployed relatively easily.
 
 ## Running Locally
 
 Make sure you have Java and Maven installed.  Also, install the [Heroku Toolbelt](https://toolbelt.heroku.com/).
 
 ```sh
-$ git clone https://github.com/heroku/java-getting-started.git
-$ cd java-getting-started
+$ git clone https://github.com/philihp/weblabora-svc.git
+$ cd weblabora-svc
 $ mvn install
 $ foreman start web
 ```
 
 Your app should now be running on [localhost:5000](http://localhost:5000/).
 
-If you're going to use a database, ensure you have a local `.env` file that reads something like this:
-
-```
-DATABASE_URL=postgres://localhost:5432/java_database_name
-```
+You should now be able to PUT to `/`, with a raw text of all of the move lists of a game. The server will then redirect you to a GET address which will
+contain a JSON CLOB of the board. Fancypants caching involved too, although it's probably overkill.
 
 ## Deploying to Heroku
 
@@ -30,9 +28,3 @@ $ heroku create
 $ git push heroku master
 $ heroku open
 ```
-
-## Documentation
-
-For more information about using Java on Heroku, see these Dev Center articles:
-
-- [Java on Heroku](https://devcenter.heroku.com/categories/java)
