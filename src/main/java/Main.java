@@ -1,10 +1,12 @@
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import static spark.Spark.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.philihp.weblabora.model.*;
 import org.apache.commons.codec.binary.Hex;
 
@@ -12,7 +14,11 @@ public class Main {
 
   private static ObjectMapper objectMapper = new ObjectMapper();
 
-  private static ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
+  private static Cache<String, String> cache =
+      CacheBuilder.newBuilder()
+        .maximumSize(100000)
+        .expireAfterAccess(7, TimeUnit.DAYS)
+        .build();
 
   public static void main(String[] args) {
 
@@ -20,20 +26,21 @@ public class Main {
 
     get("/:hash", "application/json", (request, response) -> {
       String hash = request.params(":hash");
-      return cache.get(hash);
+      return cache.get(hash, () -> {
+        response.status(404);
+        return "{\"error\":\"Forgot state of board. Please retry.\"}";
+      });
     });
 
     put("/", "application/json", (request, response) -> {
       String hash = hash(request.body());
-      if(!cache.contains(hash)) {
-        Board board = new Board();
-        String[] tokens = request.body().split("\n+");
-        for (String token : tokens) {
-          MoveProcessor.processMove(board, token);
-        }
-        cache.put(hash, objectMapper.valueToTree(board).toString());
+      Board board = new Board();
+      String[] tokens = request.body().split("\n+");
+      for (String token : tokens) {
+        MoveProcessor.processMove(board, token);
       }
-      response.redirect("/" + hash, 303);
+      cache.put(hash, objectMapper.valueToTree(board).toString());
+      response.redirect("/" + hash, 303); // very important to use 303
       return null;
     });
 
@@ -41,9 +48,9 @@ public class Main {
 
   private static String hash(String contents) {
     try {
-      MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+      MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
       messageDigest.update(contents.getBytes());
-      return new String(Hex.encodeHex(messageDigest.digest())).substring(0,6);
+      return new String(Hex.encodeHex(messageDigest.digest())).substring(0,8);
     } catch (NoSuchAlgorithmException e) {
       return Integer.toString(contents.hashCode());
     }
