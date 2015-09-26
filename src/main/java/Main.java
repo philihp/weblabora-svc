@@ -16,9 +16,9 @@ public class Main {
 
   private static Cache<String, String> cache =
       CacheBuilder.newBuilder()
-        .maximumSize(100000)
-        .expireAfterAccess(7, TimeUnit.DAYS)
-        .build();
+          .maximumSize(100000)
+          .expireAfterAccess(7, TimeUnit.DAYS)
+          .build();
 
   public static void main(String[] args) {
 
@@ -26,15 +26,13 @@ public class Main {
 
     get("/:hash", "application/json", (request, response) -> {
       String hash = request.params(":hash");
-      response.header("Access-Control-Allow-Origin", "*");
       return cache.get(hash, () -> {
         response.status(404);
         return "{\"error\":\"Forgot state of board. Please retry.\"}";
       });
     });
 
-    get("/", "application/json", (request, response) -> {
-      response.header("Access-Control-Allow-Origin", "*");
+    get("/", "application/json", (request, response) -> {;
       return Boolean.FALSE;
     });
 
@@ -46,9 +44,26 @@ public class Main {
         MoveProcessor.processMove(board, token);
       }
       cache.put(hash, objectMapper.valueToTree(board).toString());
-      response.header("Access-Control-Allow-Origin", "*");
       response.redirect("/" + hash, 303); // very important to use 303
       return null;
+    });
+
+    options("/*", (request, response) -> {
+      String accessControlRequestHeaders = request.headers("Access-Control-Request-Headers");
+      if (accessControlRequestHeaders != null) {
+        response.header("Access-Control-Allow-Headers", accessControlRequestHeaders);
+      }
+
+      String accessControlRequestMethod = request.headers("Access-Control-Request-Method");
+      if (accessControlRequestMethod != null) {
+        response.header("Access-Control-Allow-Methods", accessControlRequestMethod);
+      }
+
+      return "OK";
+    });
+
+    before((request,response)-> {
+        response.header("Access-Control-Allow-Origin", "*");
     });
 
   }
@@ -57,10 +72,11 @@ public class Main {
     try {
       MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
       messageDigest.update(contents.getBytes());
-      return new String(Hex.encodeHex(messageDigest.digest())).substring(0,8);
+      return new String(Hex.encodeHex(messageDigest.digest())).substring(0, 8);
     } catch (NoSuchAlgorithmException e) {
       return Integer.toString(contents.hashCode());
     }
   }
+
 
 }
