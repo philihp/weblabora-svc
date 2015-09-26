@@ -33,6 +33,11 @@ public class Main {
       });
     });
 
+    get("/", "application/json", (request, response) -> {
+      response.header("Access-Control-Allow-Origin", "*");
+      return Boolean.FALSE;
+    });
+
     put("/", "application/json", (request, response) -> {
       String hash = hash(request.body());
       Board board = new Board();
