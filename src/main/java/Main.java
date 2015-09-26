@@ -25,7 +25,8 @@ public class Main {
     port(Integer.valueOf(System.getenv("PORT")));
 
     get("/:hash", "application/json", (request, response) -> {
-      String hash = request.params(":hsh");
+      String hash = request.params(":hash");
+      response.header("Access-Control-Allow-Origin", "*");
       return cache.get(hash, () -> {
         response.status(404);
         return "{\"error\":\"Forgot state of board. Please retry.\"}";
@@ -40,6 +41,7 @@ public class Main {
         MoveProcessor.processMove(board, token);
       }
       cache.put(hash, objectMapper.valueToTree(board).toString());
+      response.header("Access-Control-Allow-Origin", "*");
       response.redirect("/" + hash, 303); // very important to use 303
       return null;
     });
