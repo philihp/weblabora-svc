@@ -36,7 +36,7 @@ public class Main {
       return Boolean.FALSE;
     });
 
-    put("/", "application/json", (request, response) -> {
+    post("/", "application/json", (request, response) -> {
       String hash = hash(request.body());
       Board board = new Board();
       String[] tokens = request.body().split("\n+");
