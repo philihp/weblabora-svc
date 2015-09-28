@@ -26,11 +26,15 @@ public class Main {
 
     get("/:hash", "application/json", (request, response) -> {
       String hash = request.params(":hash");
-      response.header("Cache-Control", "max-age=86400");
-      return cache.get(hash, () -> {
+      String value = cache.getIfPresent(hash);
+      if(value == null) {
         response.status(404);
         return objectMapper.writeValueAsString(new Exception("Forgot cached board state. Please re-post."));
-      });
+      }
+      else {
+        response.header("Cache-Control", "max-age=86400");
+        return value;
+      }
     });
 
     get("/", "application/json", (request, response) -> {;
@@ -40,12 +44,14 @@ public class Main {
     post("/", "application/json", (request, response) -> {
       try {
         String hash = hash(request.body());
-        Board board = new Board();
-        String[] tokens = request.body().split("\n+");
-        for (String token : tokens) {
-          MoveProcessor.processMove(board, token);
-        }
-        cache.put(hash, objectMapper.valueToTree(board).toString());
+        String value = cache.get(hash, () -> {
+          Board board = new Board();
+          String[] tokens = request.body().split("\n+");
+          for (String token : tokens) {
+            MoveProcessor.processMove(board, token);
+          }
+          return objectMapper.valueToTree(board).toString();
+        });
         response.redirect("/" + hash, 303); // very important to use 303
         return null;
       }
