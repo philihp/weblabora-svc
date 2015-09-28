@@ -26,9 +26,10 @@ public class Main {
 
     get("/:hash", "application/json", (request, response) -> {
       String hash = request.params(":hash");
+      response.header("Cache-Control", "max-age=86400");
       return cache.get(hash, () -> {
         response.status(404);
-        return "{\"error\":\"Forgot state of board. Please retry.\"}";
+        return objectMapper.writeValueAsString(new Exception("Forgot cached board state. Please re-post."));
       });
     });
 
@@ -37,15 +38,21 @@ public class Main {
     });
 
     post("/", "application/json", (request, response) -> {
-      String hash = hash(request.body());
-      Board board = new Board();
-      String[] tokens = request.body().split("\n+");
-      for (String token : tokens) {
-        MoveProcessor.processMove(board, token);
+      try {
+        String hash = hash(request.body());
+        Board board = new Board();
+        String[] tokens = request.body().split("\n+");
+        for (String token : tokens) {
+          MoveProcessor.processMove(board, token);
+        }
+        cache.put(hash, objectMapper.valueToTree(board).toString());
+        response.redirect("/" + hash, 303); // very important to use 303
+        return null;
       }
-      cache.put(hash, objectMapper.valueToTree(board).toString());
-      response.redirect("/" + hash, 303); // very important to use 303
-      return null;
+      catch(WeblaboraException e) {
+        response.status(400);
+        return objectMapper.writeValueAsString(e);
+      }
     });
 
     options("/*", (request, response) -> {
