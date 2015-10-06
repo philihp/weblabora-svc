@@ -1,6 +1,6 @@
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.TimeUnit;
+import static java.util.concurrent.TimeUnit.*;
 
 import static spark.Spark.*;
 
@@ -17,7 +17,7 @@ public class Main {
   private static Cache<String, String> cache =
       CacheBuilder.newBuilder()
           .maximumSize(100000)
-          .expireAfterAccess(7, TimeUnit.DAYS)
+          .expireAfterAccess(7, DAYS)
           .build();
 
   public static void main(String[] args) {
@@ -42,32 +42,32 @@ public class Main {
     });
 
     post("/", "application/json", (request, response) -> {
-      try {
-        String hash = hash(request.body());
-        String value = cache.get(hash, () -> {
+      String hash = hash(request.body());
+      String value = cache.get(hash, () -> {
+        try {
           Board board = new Board();
           String[] tokens = request.body().split("\n+");
           for (String token : tokens) {
             MoveProcessor.processMove(board, token);
           }
+          response.redirect("/" + hash, 303); // very important to use 303
           return objectMapper.valueToTree(board).toString();
-        });
-        response.redirect("/" + hash, 303); // very important to use 303
-        return null;
-      }
-      catch(WeblaboraException e) {
-        response.status(400);
-        return objectMapper.writeValueAsString(e);
-      }
+        }
+        catch(WeblaboraException e) {
+          response.status(400);
+          return objectMapper.writeValueAsString(e);
+        }
+      });
+      return value;
     });
 
     options("/*", (request, response) -> {
       return "OK";
     });
 
-    before((request,response)-> {
+    before((request, response) -> {
       String origin = request.headers("Origin");
-      if(origin != null) {
+      if (origin != null) {
         response.header("Access-Control-Allow-Origin", origin);
       }
       String headers = request.headers("Access-Control-Request-Headers");
