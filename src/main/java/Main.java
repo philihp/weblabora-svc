@@ -1,5 +1,6 @@
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
 import static java.util.concurrent.TimeUnit.*;
 
 import static spark.Spark.*;
@@ -37,20 +38,33 @@ public class Main {
       }
     });
 
-    get("/", "application/json", (request, response) -> {;
-      return Boolean.FALSE;
-    });
+    get("/", (request, response) ->
+      "<html>" +
+        "<head>" +
+        "</head>" +
+        "<body>" +
+          "<form action=\"#\" method=\"POST\">" +
+          "<textarea cols=\"80\" rows=\"40\" name=\"actions\"></textarea>" +
+          "<input type=\"submit\" />" +
+          "</form>" +
+        "</body>" +
+      "</html>"
+    );
 
     post("/", "application/json", (request, response) -> {
-      String hash = hash(request.body());
+      String body = request.queryParams("actions");
+      if(body == null) body = request.body();
+      if(body == null) body = "";
+      final String finalBody = body;
+
+      String hash = hash(finalBody);
       String value = cache.get(hash, () -> {
         try {
           Board board = new Board();
-          String[] tokens = request.body().split("\n+");
+          String[] tokens = finalBody.split("\n+");
           for (String token : tokens) {
             MoveProcessor.processMove(board, token);
           }
-          response.redirect("/" + hash, 303); // very important to use 303
           return objectMapper.valueToTree(board).toString();
         }
         catch(WeblaboraException e) {
@@ -58,12 +72,11 @@ public class Main {
           return objectMapper.writeValueAsString(e);
         }
       });
+      response.redirect("/" + hash, 303); // very important to use 303
       return value;
     });
 
-    options("/*", (request, response) -> {
-      return "OK";
-    });
+    options("/*", (request, response) -> "OK");
 
     before((request, response) -> {
       String origin = request.headers("Origin");
