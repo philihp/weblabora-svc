@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd /Users/phil_busby/work/weblabora-svc/target/classes/
+java -DPORT=5000 -cp ../dependency/\*:. Main

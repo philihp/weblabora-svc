@@ -23,7 +23,12 @@ public class Main {
 
   public static void main(String[] args) {
 
-    port(Integer.valueOf(System.getenv("PORT")));
+    if(System.getenv("PORT") == null) {
+      port(5000);
+    }
+    else {
+      port(Integer.valueOf(System.getenv("PORT")));
+    }
 
     get("/:hash", "application/json", (request, response) -> {
       String hash = request.params(":hash");
