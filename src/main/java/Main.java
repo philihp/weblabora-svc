@@ -66,7 +66,7 @@ public class Main {
       String value = cache.get(hash, () -> {
         try {
           Board board = new Board();
-          String[] tokens = finalBody.split("\n+");
+          String[] tokens = finalBody.split("[\r\n]+");
           for (String token : tokens) {
             MoveProcessor.processMove(board, token);
           }
