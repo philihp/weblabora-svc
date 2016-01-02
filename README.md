@@ -10,11 +10,11 @@ It was made from some Heroku boilerplate, and should be able to be deployed rela
 Make sure you have Java and Maven installed.  Also, install the [Heroku Toolbelt](https://toolbelt.heroku.com/).
 
 ```sh
+
 $ git clone https://github.com/philihp/weblabora-svc.git
 $ cd weblabora-svc
-$ mvn install
-$ foreman start web
-```
+$ mvn compile dependency:copy-dependencies
+$ scripts/run
 
 Your app should now be running on [localhost:5000](http://localhost:5000/).
 
