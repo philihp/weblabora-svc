@@ -72,7 +72,7 @@ public class Main {
           }
           return objectMapper.valueToTree(board).toString();
         }
-        catch(WeblaboraException e) {
+        catch(Exception e) {
           response.status(400);
           return objectMapper.writeValueAsString(e);
         }
